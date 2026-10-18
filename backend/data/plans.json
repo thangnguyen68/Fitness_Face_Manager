@@ -1,0 +1,16 @@
+[
+  {
+    "id": "plan-standard",
+    "name": "Standard",
+    "duration_days": 30,
+    "price": 350000,
+    "is_active": true
+  },
+  {
+    "id": "plan-premium",
+    "name": "Premium",
+    "duration_days": 30,
+    "price": 500000,
+    "is_active": true
+  }
+]

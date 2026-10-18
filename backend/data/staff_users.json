@@ -1,0 +1,7 @@
+[
+  {
+    "email": "admin@faceaccess.local",
+    "password_hash": "$argon2id$v=19$m=65536,t=3,p=4$emD1fFzbDPrYKHvjYGQprQ$l56r6DEu9TqMMxg/wlRk/2VG1xRtSGlXb3sSV1JzTZ8",
+    "role": "admin"
+  }
+]

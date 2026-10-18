@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FaceAccess – Prototype quản lý hội viên & kiểm soát ra vào</title>
+<style>
+:root{--ink:#12201B;--mut:#4F625A;--bg:#F4F6F5;--card:#fff;--line:#DCE5E0;--g:#0F7B5F;--gd:#0A5C46;--gl:#DDF3EA;--r:#B42318;--rl:#FCE4E1;--rd:#912018;--a:#B54708;--al:#FDEBD3;--ad:#93370D;--dark:#0B1511;--dark2:#16241E}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.4}
+button{font:inherit;cursor:pointer}
+.app{display:flex;min-height:100vh}
+.side{width:220px;flex:none;background:var(--ink);color:#C9D6D0;padding:24px 16px;display:flex;flex-direction:column;gap:4px}
+.side b{color:#fff;font-size:17px;padding:0 12px 20px}
+.side button{all:unset;box-sizing:border-box;padding:11px 12px;border-radius:8px;font-size:14px;cursor:pointer;min-height:44px;display:flex;align-items:center}
+.side button:hover{background:#1E332B}
+.side button[aria-current=page]{background:var(--g);color:#fff}
+.side button:focus-visible,.btn:focus-visible,.tab:focus-visible{outline:3px solid #3DDC97;outline-offset:2px}
+.main{flex:1;min-width:0;padding:28px 32px;display:flex;flex-direction:column;gap:20px}
+.hd{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:24px;margin:0}
+.crumb{font-size:13px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+.lbl{font-size:12px;color:var(--mut);letter-spacing:.04em;text-transform:uppercase}
+.num{font-size:34px;font-weight:700;margin-top:6px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap}
+.ok{background:var(--gl);color:var(--gd)}.no{background:var(--rl);color:var(--rd)}.un{background:var(--al);color:var(--ad)}
+.row{display:flex;align-items:center;gap:8px;padding:11px 0;border-top:1px solid #E8EEEA;font-size:14px}
+.row>:first-child{flex:2}.row>*{flex:1}
+.btn{background:var(--g);color:#fff;border:0;border-radius:8px;padding:12px 20px;font-weight:600;font-size:14px;min-height:44px}
+.btn:disabled{background:#9DB5AC;cursor:not-allowed}
+.btn2{background:#fff;color:var(--ink);border:1px solid #B9C7C0}
+.bars{display:flex;align-items:flex-end;gap:10px;height:200px;margin-top:18px;border-bottom:1px solid var(--line)}
+.bars i{flex:1;background:#9FD8C4}.bars i.hi{background:var(--g)}
+.hrs{display:flex;gap:10px;font-size:12px;color:var(--mut);margin-top:6px}.hrs span{flex:1}
+.tabs{display:flex;gap:24px;border-bottom:1px solid var(--line);font-size:14px;overflow-x:auto}
+.tab{all:unset;cursor:pointer;padding:0 0 10px;color:var(--mut);white-space:nowrap}
+.tab[aria-selected=true]{border-bottom:3px solid var(--g);font-weight:600;color:var(--ink)}
+.cam{background:var(--dark2);border-radius:10px;display:flex;align-items:center;justify-content:center;min-height:300px;position:relative}
+.view{display:none}.view.on{display:block}
+/* Kiosk */
+#kiosk{position:fixed;inset:0;background:var(--dark);color:#fff;display:none;flex-direction:column;z-index:10}
+#kiosk.on{display:flex}
+.kbar{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;font-size:14px;color:#9FB3AA;gap:12px;flex-wrap:wrap}
+.kbody{flex:1;display:flex;gap:24px;padding:0 28px 20px;flex-wrap:wrap}
+.kbody>div{flex:1 1 320px;border-radius:16px}
+#kres{padding:32px;display:flex;flex-direction:column;justify-content:center;gap:14px;transition:background .25s}
+.av{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700}
+.ktools{display:flex;gap:10px;padding:0 28px 24px;flex-wrap:wrap;align-items:center;color:#9FB3AA;font-size:13px}
+.ktools .btn{background:#22362D;padding:10px 16px}.ktools .btn[aria-pressed=true]{background:var(--g)}
+/* Enroll */
+.dots{display:flex;gap:10px;flex-wrap:wrap}
+@media(max-width:760px){.app{flex-direction:column}.side{width:auto;flex-direction:row;overflow-x:auto;padding:12px}.side b{padding:0 12px 0 4px;align-self:center}.main{padding:20px 16px}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <nav class="side" aria-label="Điều hướng">
+    <b>FaceAccess</b>
+    <button data-go="dash" aria-current="page">Tổng quan</button>
+    <button data-go="members">Hội viên</button>
+    <button data-go="enroll">Đăng ký khuôn mặt</button>
+    <button data-go="logs">Nhật ký ra vào</button>
+    <button id="openKiosk">Mở màn hình Kiosk ↗</button>
+  </nav>
+  <main class="main">
+
+    <section class="view on" id="v-dash">
+      <div class="hd"><h1>Tổng quan hôm nay</h1><button class="btn" data-go="enroll">+ Thêm hội viên</button></div>
+      <div class="grid4" style="margin:20px 0 16px">
+        <div class="card"><div class="lbl">Lượt vào</div><div class="num">128</div></div>
+        <div class="card"><div class="lbl">Đang có mặt</div><div class="num">37</div></div>
+        <div class="card"><div class="lbl">Tỉ lệ từ chối</div><div class="num">4%</div></div>
+        <div class="card"><div class="lbl">Sắp hết hạn (7 ngày)</div><div class="num">9</div></div>
+      </div>
+      <div class="two">
+        <div class="card"><div class="lbl">Lượt vào theo giờ</div>
+          <div class="bars" role="img" aria-label="Biểu đồ lượt vào theo giờ, cao nhất lúc 18 giờ"><i style="height:15%"></i><i style="height:35%"></i><i class="hi" style="height:75%"></i><i style="height:55%"></i><i style="height:30%"></i><i style="height:45%"></i><i class="hi" style="height:85%"></i><i style="height:60%"></i></div>
+          <div class="hrs"><span>6h</span><span>8h</span><span>10h</span><span>12h</span><span>14h</span><span>16h</span><span>18h</span><span>20h</span></div></div>
+        <div class="card"><div class="lbl">Sự kiện gần nhất</div><div id="recent"></div></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-members">
+      <div class="hd"><h1>Hội viên</h1><button class="btn" data-go="enroll">+ Thêm hội viên</button></div>
+      <div class="card" style="margin-top:20px">
+        <div class="row" style="border:0"><span class="lbl">Họ tên</span><span class="lbl">Mã</span><span class="lbl">Gói</span><span class="lbl">Trạng thái</span></div>
+        <div class="row"><span>Nguyễn Văn A</span><span>MB-000123</span><span>Premium</span><span><span class="pill ok">Đang hoạt động</span></span></div>
+        <div class="row"><span>Trần Thị B</span><span>MB-000045</span><span>Standard</span><span><span class="pill no">Hết hạn</span></span></div>
+        <div class="row"><span>Lê Minh C</span><span>MB-000078</span><span>Premium</span><span><span class="pill ok">Đang hoạt động</span></span></div>
+        <div class="row"><span>Phạm Thu D</span><span>MB-000091</span><span>Standard</span><span><span class="pill un">Bị khóa</span></span></div>
+      </div>
+    </section>
+
+    <section class="view" id="v-enroll">
+      <div><div class="crumb">Hội viên / MB-000123</div><h1 style="margin-top:4px">Nguyễn Văn A · Đăng ký khuôn mặt</h1></div>
+      <div class="tabs" role="tablist" style="margin:16px 0 20px">
+        <button class="tab" role="tab" aria-selected="false">Thông tin</button>
+        <button class="tab" role="tab" aria-selected="false">Gói thành viên</button>
+        <button class="tab" role="tab" aria-selected="true">Khuôn mặt</button>
+        <button class="tab" role="tab" aria-selected="false">Lịch sử ra vào</button>
+      </div>
+      <div class="two">
+        <div class="card" style="display:flex;flex-direction:column;align-items:center;gap:14px">
+          <div class="cam" style="width:100%"><svg width="220" height="270" viewBox="0 0 220 270" role="img" aria-label="Khung căn chỉnh khuôn mặt"><ellipse cx="110" cy="135" rx="86" ry="112" fill="#22362D" stroke="#3DDC97" stroke-width="4" stroke-dasharray="10 8"/></svg></div>
+          <div id="stepTxt" style="font-weight:600"></div>
+          <div class="dots" id="dots"></div>
+          <button class="btn btn2" id="shot">Chụp ảnh</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="card"><div class="lbl">Chất lượng ảnh</div>
+            <div class="row"><span>Số khuôn mặt</span><span><span class="pill ok">1 · Đạt</span></span></div>
+            <div class="row"><span>Độ sáng</span><span><span class="pill ok">Đạt</span></span></div>
+            <div class="row"><span>Độ nét</span><span><span class="pill ok">Đạt</span></span></div></div>
+          <div class="card"><label style="display:flex;gap:12px;font-size:14px;line-height:1.45"><input type="checkbox" id="consent" style="width:20px;height:20px;flex:none"><span>Hội viên đồng ý cho thu thập và xử lý dữ liệu khuôn mặt để kiểm soát ra vào (điều khoản v1.0).</span></label></div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap"><button class="btn btn2" id="reset">Chụp lại</button><button class="btn" id="save" disabled>Lưu khuôn mặt</button></div>
+          <div id="saved" class="pill ok" style="display:none;align-self:flex-start">Đã lưu 3 mẫu khuôn mặt</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="v-logs">
+      <div class="hd"><h1>Nhật ký ra vào</h1><button class="btn btn2">Xuất CSV</button></div>
+      <div class="card" style="margin-top:20px"><div class="row" style="border:0"><span class="lbl">Thời gian · Hội viên</span><span class="lbl">Hướng</span><span class="lbl">Kết quả</span></div><div id="logs"></div></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="kiosk" role="dialog" aria-label="Màn hình kiosk">
+  <div class="kbar"><span>Cửa chính · <b style="color:#fff">VÀO</b></span><span>● Đã kết nối &nbsp; <span id="clock">09:41:07</span></span></div>
+  <div class="kbody">
+    <div style="background:var(--dark2);position:relative;display:flex;align-items:center;justify-content:center;min-height:300px">
+      <svg width="300" height="360" viewBox="0 0 300 360" role="img" aria-label="Khung nhận diện khuôn mặt"><ellipse cx="150" cy="170" rx="92" ry="120" fill="#22362D"/><g id="corners" stroke="#3DDC97" stroke-width="5" fill="none" stroke-linecap="round"><path d="M40 70V40H70"/><path d="M230 40H260V70"/><path d="M40 290V320H70"/><path d="M260 290V320H230"/></g></svg>
+      <div id="kconf" style="position:absolute;bottom:16px;font-size:13px;color:#9FB3AA"></div>
+    </div>
+    <div id="kres"></div>
+  </div>
+  <div class="ktools"><span>Mô phỏng kết quả:</span>
+    <button class="btn" data-k="allow" aria-pressed="true">Cho phép</button>
+    <button class="btn" data-k="expired" aria-pressed="false">Hết hạn</button>
+    <button class="btn" data-k="unknown" aria-pressed="false">Không nhận diện</button>
+    <button class="btn" id="closeKiosk" style="margin-left:auto">Thoát kiosk</button></div>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+/* Điều hướng */
+function go(v){
+  $$('.view').forEach(e=>e.classList.toggle('on',e.id==='v-'+v));
+  $$('.side [data-go]').forEach(b=>b.toggleAttribute('aria-current',b.dataset.go===v)||b.removeAttribute('aria-current'));
+  $$('.side [data-go]').forEach(b=>{if(b.dataset.go===v)b.setAttribute('aria-current','page')});
+}
+$$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+/* Dữ liệu mẫu */
+const ev=[['09:41','Nguyễn Văn A','VÀO','ok','Cho phép'],['09:39','Trần Thị B','VÀO','no','Hết hạn gói'],['09:36','Không xác định','VÀO','un','Không nhận diện'],['09:31','Lê Minh C','RA','ok','Cho phép'],['09:28','Phạm Thu D','VÀO','no','Bị khóa'],['09:20','Nguyễn Văn A','RA','ok','Cho phép'],['09:12','Hoàng Văn E','VÀO','ok','Cho phép']];
+const rowHtml=e=>`<div class="row"><span>${e[0]} · ${e[1]}</span><span>${e[2]}</span><span><span class="pill ${e[3]}">${e[4]}</span></span></div>`;
+$('#recent').innerHTML=ev.slice(0,5).map(rowHtml).join('');
+$('#logs').innerHTML=ev.map(rowHtml).join('');
+/* Đăng ký khuôn mặt */
+const steps=['Nhìn thẳng','Quay nhẹ sang trái','Quay nhẹ sang phải'];let n=0;
+function renderEnroll(){
+  $('#stepTxt').textContent=n<3?`Bước ${n+1}/3: ${steps[n]}`:'Đã chụp đủ 3 góc';
+  $('#dots').innerHTML=steps.map((s,i)=>`<span class="pill ${i<n?'ok':i===n?'un':''}" ${i>n?'style="background:#E8EEEA;color:#4F625A"':''}>${s.split(' ').pop()} ${i<n?'✓':''}</span>`).join('');
+  $('#shot').disabled=n>=3;
+  $('#save').disabled=!(n>=3&&$('#consent').checked);
+}
+$('#shot').onclick=()=>{if(n<3){n++;renderEnroll()}};
+$('#reset').onclick=()=>{n=0;$('#saved').style.display='none';renderEnroll()};
+$('#consent').onchange=renderEnroll;
+$('#save').onclick=()=>{$('#saved').style.display='inline-block'};
+renderEnroll();
+/* Kiosk */
+const K={
+  allow:{bg:'#0F7B5F',t:'ĐƯỢC PHÉP VÀO',av:['#DDF3EA','#0A5C46','NA'],h:'Xin chào,<br>Nguyễn Văn A',l:['MB-000123 · Gói Premium','Hết hạn: 31/12/2026'],c:'Độ tin cậy 0.71 · Liveness: đạt',cr:'#3DDC97'},
+  expired:{bg:'#B42318',t:'TỪ CHỐI',av:['#FCE4E1','#912018','TB'],h:'Gói thành viên<br>đã hết hạn',l:['Trần Thị B · MB-000045','Hết hạn ngày 30/09/2026 · Vui lòng gia hạn tại quầy'],c:'Độ tin cậy 0.68',cr:'#F97066'},
+  unknown:{bg:'#B54708',t:'KHÔNG NHẬN DIỆN',av:['#FDEBD3','#93370D','?'],h:'Không nhận diện<br>được khuôn mặt',l:['Vui lòng nhìn thẳng vào camera','hoặc liên hệ lễ tân'],c:'Độ tin cậy 0.31',cr:'#FDB022'}
+};
+function kiosk(k){
+  const s=K[k];$('#kres').style.background=s.bg;
+  $('#kres').innerHTML=`<div style="font-size:13px;letter-spacing:.08em;font-weight:600">${s.t}</div><div class="av" style="background:${s.av[0]};color:${s.av[1]}">${s.av[2]}</div><div style="font-size:34px;font-weight:700;line-height:1.15">${s.h}</div>${s.l.map(x=>`<div style="font-size:16px;opacity:.92">${x}</div>`).join('')}`;
+  $('#kconf').textContent=s.c;$('#corners').setAttribute('stroke',s.cr);
+  $$('[data-k]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));
+}
+$$('[data-k]').forEach(b=>b.onclick=()=>kiosk(b.dataset.k));
+$('#openKiosk').onclick=()=>{$('#kiosk').classList.add('on');kiosk('allow')};
+$('#closeKiosk').onclick=()=>$('#kiosk').classList.remove('on');
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#kiosk').classList.remove('on')});
+setInterval(()=>{$('#clock').textContent=new Date().toLocaleTimeString('vi-VN')},1000);
+</script>
+</body>
+</html>

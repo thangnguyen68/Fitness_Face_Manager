@@ -1,0 +1,14 @@
+services:
+  api:
+    build: ./backend
+    env_file: .env
+    volumes:
+      - ./backend/data:/app/data
+    expose:
+      - "8000"
+  web:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
